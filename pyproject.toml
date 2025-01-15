@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "chemhacktica-infra"
+version = "0.0.1"
+description = ""
+authors = ["Seth Curry <seth@scurry.io>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

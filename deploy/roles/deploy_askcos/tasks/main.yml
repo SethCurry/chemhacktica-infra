@@ -1,0 +1,31 @@
+- name: Create the chemhacktica group
+  ansible.builtin.group:
+    name: chemhacktica
+
+- name: Create the chemhacktica user
+  ansible.builtin.user:
+    name: chemhacktica
+    group: chemhacktica
+    home: "{{ chemhacktica_home }}"
+    create_home: true
+
+- name: Create ASKCOSv2 directory
+  ansible.builtin.file:
+    path: "{{ chemhacktica_home }}/ASKCOSv2"
+    state: directory
+    mode: "0755"
+    owner: chemhacktica
+    group: chemhacktica
+
+- name: Clone ASKCOSv2 repository
+  ansible.builtin.git:
+    repo: https://github.com/FourThievesVinegar/askcos2_core.git
+    dest: "{{ chemhacktica_home }}/ASKCOSv2/askcos2_core"
+    version: master
+    force: true
+    update: true
+
+- name: Run the ASKCOSv2 setup script
+  ansible.builtin.command:
+    cmd: make deploy
+    chdir: "{{ chemhacktica_home }}/ASKCOSv2/askcos2_core"
