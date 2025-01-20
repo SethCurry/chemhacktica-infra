@@ -1,0 +1,27 @@
+# https://taskfile.dev
+
+version: "3"
+
+vars:
+  GREETING: Hello, World!
+
+tasks:
+  build:
+    sources:
+      - bin/**/*.go
+    generates:
+      - chemgr
+    cmds:
+      - go build ./bin/chemgr
+  deploy:
+    sources:
+      - chemgr
+    deps:
+      - build
+    cmds:
+      - scp ./chemgr ubuntu@shulgin.scurry.io:/home/ubuntu/chemgr
+  health:
+    deps:
+      - deploy
+    cmds:
+      - ssh ubuntu@shulgin.scurry.io "chmod +x /home/ubuntu/chemgr && sudo /home/ubuntu/chemgr health-check"
