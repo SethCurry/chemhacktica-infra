@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/SethCurry/chemhacktica-infra/internal/health"
 	"github.com/docker/docker/api/types"
@@ -44,6 +47,40 @@ func checkLogs(
 	defer logs.Close()
 
 	return checker(logs)
+}
+
+type parsedHTTPLogLine struct {
+	SourceIP  string
+	Timestamp time.Time
+	Method    string
+	Path      string
+	Status    int
+}
+
+func parseHTTPLogLine(line string) (*parsedHTTPLogLine, error) {
+	// Sample log line
+	// 172.69.214.214 - - [17/Dec/2024:03:14:51 +0000] "GET /api/legacy/celery/task/c139737b-2661-4c0a-b745-11d4db84d0df/ HTTP/1.1" 200 149 "https://synth.fourthievesvinegar.org/network?tab=IPP&target=Clc1cc2c(cc1)N(C(%3DO)N2)C5CCN(CCCN4c3ccccc3NC4%3DO)CC5" "Mozilla/5.0 (X11; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0"
+	parts := strings.Split(line, " ")
+
+	statusInt, err := strconv.Atoi(parts[8])
+	if err != nil {
+		return nil, fmt.Errorf("error parsing status: %w", err)
+	}
+
+	timestamp, err := time.Parse("02/Jan/2006:03:04:05", strings.TrimLeft(parts[3], "["))
+	if err != nil {
+		return nil, fmt.Errorf("error parsing timestamp: %w", err)
+	}
+
+	resp := parsedHTTPLogLine{
+		SourceIP:  parts[0],
+		Method:    strings.TrimLeft(parts[5], "\""),
+		Path:      parts[6],
+		Status:    statusInt,
+		Timestamp: timestamp,
+	}
+
+	return &resp, nil
 }
 
 func checkIfContainersPresent(containers []types.Container) ([]health.CheckResult, error) {
