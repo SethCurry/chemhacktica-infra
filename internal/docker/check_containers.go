@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"slices"
 
 	"github.com/SethCurry/chemhacktica-infra/internal/health"
 	"github.com/docker/docker/api/types"
@@ -56,7 +55,25 @@ func checkIfContainersPresent(containers []types.Container) ([]health.CheckResul
 	}
 
 	for _, expectedContainer := range health.ExpectedContainerNames() {
-		if !slices.Contains(containerNames, expectedContainer) {
+		found := false
+		for _, cont := range containers {
+			for _, name := range cont.Names {
+				if name == expectedContainer {
+					found = true
+
+					if cont.State != "running" {
+						results = append(results, health.CheckResult{
+							Subject: fmt.Sprintf("container %s", expectedContainer),
+							Success: false,
+							Message: "container not running",
+						})
+					}
+					break
+				}
+			}
+		}
+
+		if !found {
 			results = append(results, health.CheckResult{
 				Subject: fmt.Sprintf("container %s", expectedContainer),
 				Success: false,

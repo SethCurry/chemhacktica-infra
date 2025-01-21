@@ -9,6 +9,7 @@ tasks:
   build:
     sources:
       - bin/**/*.go
+      - internal/**/*.go
     generates:
       - chemgr
     cmds:

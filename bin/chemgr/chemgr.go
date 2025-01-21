@@ -37,7 +37,7 @@ func (h *HealthCheckCLI) Run(bound *Bound) error {
 
 	for _, result := range results {
 		if !result.Success {
-			logger.Error(result.Message)
+			logger.Info(result.Message, zap.String("subject", result.Subject))
 		}
 	}
 
