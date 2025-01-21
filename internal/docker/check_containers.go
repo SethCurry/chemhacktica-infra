@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"fmt"
+	"io"
 	"slices"
 
 	"github.com/SethCurry/chemhacktica-infra/internal/health"
@@ -20,44 +21,33 @@ func CheckContainers(apiClient *client.Client) ([]health.CheckResult, error) {
 	return checkIfContainersPresent(containerList)
 }
 
-func checkIfContainersPresent(containers []types.Container) ([]health.CheckResult, error) {
-	expectedContainers := []string{
-		"/deploy-celery_workers-1",
-		"/deploy-app-1",
-		"/retro_star",
-		"/mcts",
-		"/expand_one",
-		"/solubility",
-		"/site_selectivity",
-		"/scscore",
-		"/retro_template_relevance",
-		"/retro_retrosim",
-		"/retro_graph2smiles",
-		"/retro_augmented_transformer",
-		"/reaction_class",
-		"/qm_descriptors",
-		"/pmi_calculator",
-		"/pathway_ranker",
-		"/impurity_predictor",
-		"/general_selectivity",
-		"/forward_wldn5",
-		"/forward_graph2smiles",
-		"/forward_augmented_transformer",
-		"/fast_filter",
-		"/evaluate_reactions",
-		"/descriptors",
-		"/count_analogs",
-		"/context_recommender",
-		"/cluster",
-		"/atom_map_wln",
-		"/atom_map_rxnmapper",
-		"/atom_map_indigo",
-		"/deploy-mongo-1",
-		"/deploy-web-1",
-		"/deploy-rabbitmq-1",
-		"/deploy-redis-1",
+// logChecker is a function expected to read the provided logs,
+// parse them, and return a list of health check results.
+type logChecker func(logs io.Reader) ([]health.CheckResult, error)
+
+// checkLogs checks the logs of a container and
+// returns a list of health check results.
+// The provided checker function is responsible for
+// parsing the logs and returning the results.
+func checkLogs(
+	apiClient *client.Client,
+	containerID string,
+	checker logChecker,
+) ([]health.CheckResult, error) {
+	logs, err := apiClient.ContainerLogs(context.Background(), containerID, container.LogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error getting logs: %w", err)
 	}
 
+	defer logs.Close()
+
+	return checker(logs)
+}
+
+func checkIfContainersPresent(containers []types.Container) ([]health.CheckResult, error) {
 	var results []health.CheckResult
 
 	containerNames := []string{}
@@ -65,11 +55,12 @@ func checkIfContainersPresent(containers []types.Container) ([]health.CheckResul
 		containerNames = append(containerNames, container.Names...)
 	}
 
-	for _, expectedContainer := range expectedContainers {
+	for _, expectedContainer := range health.ExpectedContainerNames() {
 		if !slices.Contains(containerNames, expectedContainer) {
 			results = append(results, health.CheckResult{
+				Subject: fmt.Sprintf("container %s", expectedContainer),
 				Success: false,
-				Message: fmt.Sprintf("container %s not found", expectedContainer),
+				Message: "container not found",
 			})
 		}
 	}
