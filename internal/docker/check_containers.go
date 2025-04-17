@@ -130,9 +130,9 @@ func parseHTTPLogLine(line string) (*parsedHTTPLogLine, error) {
 		return nil, fmt.Errorf("error parsing status: %w", err)
 	}
 
-	timestamp, err := time.ParseInLocation("02/Jan/2006:03:04:05", strings.TrimLeft(parts[3], "["), time.UTC)
+	timestamp, err := time.ParseInLocation("02/Jan/2006:15:04:05", strings.TrimLeft(parts[3], "["), time.UTC)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing timestamp: %w", err)
+		return nil, fmt.Errorf("error parsing timestamp %s: %w", line, err)
 	}
 
 	resp := parsedHTTPLogLine{
