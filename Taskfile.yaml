@@ -6,23 +6,18 @@ vars:
   GREETING: Hello, World!
 
 tasks:
-  build:
-    sources:
-      - bin/**/*.go
-      - internal/**/*.go
-    generates:
-      - chemgr
-    cmds:
-      - go build ./bin/chemgr
   deploy:
     sources:
-      - chemgr
-    deps:
-      - build
+      - main.py
+      - cheminfra/*.py
+      - cheminfra/**/*.py
     cmds:
-      - scp ./chemgr ubuntu@shulgin.scurry.io:/home/ubuntu/chemgr
+      - rsync -avHSP --exclude '.task' --exclude '.venv' --exclude '.git' --exclude '__pycache__' --exclude '.mypy_cache' ./ ubuntu@shulgin.scurry.io:/home/ubuntu/cheminfra/
   health:
     deps:
       - deploy
     cmds:
-      - ssh ubuntu@shulgin.scurry.io "chmod +x /home/ubuntu/chemgr && sudo /home/ubuntu/chemgr health-check"
+      - ssh ubuntu@shulgin.scurry.io "cd /home/ubuntu/cheminfra && uv sync && sudo /home/ubuntu/.local/bin/uv run python main.py health"
+  test:
+    cmds:
+      - uv run pytest

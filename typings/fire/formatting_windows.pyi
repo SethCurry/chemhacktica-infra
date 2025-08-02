@@ -1,0 +1,3 @@
+HAS_COLORAMA: bool
+
+def initialize_or_disable() -> None: ...

@@ -1,0 +1,3 @@
+from fire.console import platforms as platforms
+
+def FindExecutableOnPath(executable, path=None, pathext=None, allow_extensions: bool = False): ...

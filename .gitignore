@@ -1,4 +1,6 @@
 /chemgr
 /chemgr.exe
 .task
-
+.mypy_cache
+.venv
+__pycache__
