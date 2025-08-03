@@ -43,6 +43,22 @@ def list_containers(client: DockerClient):
   containers = client.containers.list(all=True)
   for container in containers:
     print(container.name)
+  
+def find_missing_containers(client: DockerClient) -> list[str]:
+  missing_containers: list[str] = []
+  containers = client.containers.list(all=True)
+  for container in all_containers:
+    if container not in [c.name for c in containers]:
+      missing_containers.append(container)
+  return missing_containers
+
+def find_not_running_containers(client: DockerClient) -> list[str]:
+  not_running_containers: list[str] = []
+  containers = client.containers.list()
+  for container in containers:
+    if container.status != "running":
+      not_running_containers.append(container.name)
+  return not_running_containers
 
 @dataclass
 class ApacheLog:

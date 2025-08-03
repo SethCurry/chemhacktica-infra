@@ -3,7 +3,7 @@ import logging
 import structlog
 import docker
 
-from cheminfra.containers import parse_apache_log_line
+from cheminfra.containers import parse_apache_log_line, find_missing_containers, find_not_running_containers
 
 structlog.configure(
     processors=[
@@ -25,11 +25,15 @@ log = structlog.get_logger()
 class CLI:
     def health(self):
         client = docker.from_env()
-        containers = client.containers.list(all=True)
-        for container in containers:
-            if container.status != "running":
-                log.error("container is not running", container=container.name)
-                continue
+        missing_containers = find_missing_containers(client)
+        not_running_containers = find_not_running_containers(client)
+        for container in missing_containers:
+            log.error("container is missing", container=container)
+
+        for container in not_running_containers:
+            log.error("container is not running", container=container)
+
+        for container in client.containers.list():
             if container.name == "deploy-web-1":
                 logs = str(container.logs()).split("\\n")
                 for log_line in logs:
