@@ -1,8 +1,11 @@
 import fire
 import logging
+from sqlalchemy import create_engine
 import structlog
 import docker
 
+from cheminfra.configuration import load_default_configuration
+from cheminfra.ingest.scheduler import scheduler
 from cheminfra.containers import parse_apache_log_line, find_missing_containers, find_not_running_containers
 
 structlog.configure(
@@ -23,6 +26,12 @@ log = structlog.get_logger()
 
 
 class CLI:
+    def scheduler(self):
+        import cheminfra.ingest.containers
+        config = load_default_configuration()
+        engine = create_engine(config.database.url, echo=config.database.echo)
+        scheduler.run(engine)
+
     def health(self):
         client = docker.from_env()
         missing_containers = find_missing_containers(client)

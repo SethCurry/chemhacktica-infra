@@ -1,0 +1,4 @@
+- name: Deploy infra server
+  hosts: infra_server
+  roles:
+    - infra_server

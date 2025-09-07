@@ -1,0 +1,14 @@
+[Unit]
+Description=Chemhacktica Infra API Server
+After=network.target
+
+[Service]
+ExecStart=/home/askcos/infra/start-scheduler.sh
+Type=exec
+Restart=always
+User=askcos
+WorkingDirectory=/home/askcos/infra
+
+[Install]
+WantedBy=default.target
+RequiredBy=network.target

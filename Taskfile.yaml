@@ -6,13 +6,10 @@ vars:
   GREETING: Hello, World!
 
 tasks:
-  deploy:
-    sources:
-      - main.py
-      - cheminfra/*.py
-      - cheminfra/**/*.py
+  rollout:
     cmds:
-      - rsync -avHSP --exclude '.task' --exclude '.venv' --exclude '.git' --exclude '__pycache__' --exclude '.mypy_cache' ./ ubuntu@shulgin.scurry.io:/home/ubuntu/cheminfra/
+      - task: "ui:build"
+      - task: "deploy:run"
   health:
     deps:
       - deploy
@@ -21,3 +18,11 @@ tasks:
   test:
     cmds:
       - uv run pytest
+
+includes:
+  deploy:
+    dir: deploy
+    taskfile: deploy/Taskfile.yaml
+  ui:
+    dir: ui
+    taskfile: ui/Taskfile.yaml

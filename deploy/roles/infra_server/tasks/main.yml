@@ -1,0 +1,101 @@
+- name: Ensure nginx is installed and up to date
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+
+- name: Remove default nginx configuration
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Ensure gcc is installed
+  ansible.builtin.apt:
+    name: gcc
+    state: present
+
+- name: Ensure postgresql dev files are installed
+  ansible.builtin.apt:
+    name: postgresql-server-dev-16
+    state: present
+
+- name: Ensure postgresql is installed
+  ansible.builtin.apt:
+    name: postgresql
+    state: present
+
+- name: Ensure nginx is enabled and running
+  ansible.builtin.systemd:
+    name: nginx
+    state: started
+    enabled: true
+
+- name: Copy nginx configuration
+  ansible.builtin.template:
+    src: infra_nginx.conf
+    dest: /etc/nginx/sites-enabled/infra.conf
+    mode: "0644"
+
+- name: Reload nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: reloaded
+
+- name: Copy UI build
+  ansible.posix.synchronize:
+    delete: true
+    src: ../ui/build/
+    dest: /srv/infra/
+    recursive: true
+
+- name: Copy API code
+  ansible.posix.synchronize:
+    src: ../../../../
+    dest: /home/askcos/infra/
+    recursive: true
+    delete: false
+    rsync_opts:
+      - "--exclude=.task"
+      - "--exclude=.venv"
+      - "--exclude=.git"
+      - "--exclude=.mypy_cache"
+      - "--exclude=.pytest_cache"
+      - "--exclude=.ruff_cache"
+      - "--exclude=.vscode"
+      - "--exclude=.DS_Store"
+      - "--exclude=ui"
+      - "--exclude=deploy"
+      - "--exclude=__pycache__"
+
+- name: Ensure askcos owns API code
+  ansible.builtin.file:
+    path: /home/askcos/infra
+    state: directory
+    recurse: yes
+    owner: askcos
+    group: askcos
+
+- name: Copy API service file
+  ansible.builtin.template:
+    src: chem-infra-api.service
+    dest: /etc/systemd/system/chem-infra-api.service
+    mode: "0644"
+
+- name: Enable API service
+  ansible.builtin.systemd:
+    name: chem-infra-api
+    daemon_reload: true
+    state: restarted
+    enabled: true
+
+- name: Copy scheduler service file
+  ansible.builtin.template:
+    src: chem-infra-scheduler.service
+    dest: /etc/systemd/system/chem-infra-scheduler.service
+    mode: "0644"
+
+- name: Enable scheduler service
+  ansible.builtin.systemd:
+    name: chem-infra-scheduler
+    daemon_reload: true
+    state: restarted
+    enabled: true
