@@ -1,5 +1,6 @@
 import subprocess
-from fastapi import FastAPI, Depends
+import docker
+from fastapi import FastAPI, Depends, HTTPException
 
 from cheminfra.configuration import load_default_configuration
 from sqlalchemy import create_engine
@@ -58,6 +59,22 @@ def get_container(container_id: int, session: SessionDep):
         .one_or_none()
     )
     return container
+
+
+@app.get("/api/v1/docker/containers/{container_id}/logs")
+def get_container_logs(container_id: int, session: SessionDep):
+    container = (
+        session.query(Container).filter(Container.id == container_id).one_or_none()
+    )
+    if container is None:
+        raise HTTPException(status_code=404, detail="Container not found")
+
+    client = docker.from_env()
+    dcontainer = client.containers.get(container.container_name)
+
+    logs = dcontainer.logs(tail=1000)
+
+    return logs
 
 
 @app.get("/api/healthcheck")
