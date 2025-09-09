@@ -1,15 +1,22 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "./index.css";
+import Home from "./pages/Home";
+import reportWebVitals from "./reportWebVitals";
+import { BrowserRouter, Routes, Route } from "react-router";
+import ContainerDetail from "./pages/ContainerDetail";
 
 const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
+  document.getElementById("root") as HTMLElement
 );
 root.render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/containers/:containerId" element={<ContainerDetail />} />
+      </Routes>
+    </BrowserRouter>
   </React.StrictMode>
 );
 

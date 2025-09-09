@@ -74,7 +74,7 @@ def get_container_logs(container_id: int, session: SessionDep):
 
     logs = dcontainer.logs(tail=1000)
 
-    return logs
+    return {"logs": logs}
 
 
 @app.get("/api/healthcheck")
