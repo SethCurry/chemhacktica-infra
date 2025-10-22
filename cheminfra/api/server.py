@@ -9,10 +9,12 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 
 from cheminfra.db.containers import Container, ContainerStatus
+from cheminfra.deployment import Deployment
 
 config = load_default_configuration()
 
 engine = create_engine(config.database.url, echo=config.database.echo)
+deployment = Deployment(config.deployment.core_dir)
 
 
 @asynccontextmanager
@@ -85,7 +87,7 @@ def healthcheck():
 @app.get("/api/v1/rpc/restart")
 def make_restart():
     try:
-        subprocess.run(["make", "restart"], cwd=config.deployment.core_dir, check=True)
+        deployment.restart()
         return {"message": "Restarted successfully"}
     except subprocess.CalledProcessError as e:
         return {"message": "Failed to restart", "error": str(e)}

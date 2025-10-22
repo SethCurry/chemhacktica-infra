@@ -6,7 +6,12 @@ import docker
 
 from cheminfra.configuration import load_default_configuration
 from cheminfra.ingest.scheduler import scheduler
-from cheminfra.containers import parse_apache_log_line, find_missing_containers, find_not_running_containers
+from cheminfra.containers import (
+    parse_apache_log_line,
+    find_missing_containers,
+    find_not_running_containers,
+)
+from cheminfra.bot.botmain import run_bot
 
 structlog.configure(
     processors=[
@@ -15,19 +20,23 @@ structlog.configure(
         structlog.processors.StackInfoRenderer(),
         structlog.dev.set_exc_info,
         structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S", utc=False),
-        structlog.dev.ConsoleRenderer()
+        structlog.dev.ConsoleRenderer(),
     ],
     wrapper_class=structlog.make_filtering_bound_logger(logging.DEBUG),
     context_class=dict,
     logger_factory=structlog.PrintLoggerFactory(),
-    cache_logger_on_first_use=False
+    cache_logger_on_first_use=False,
 )
 log = structlog.get_logger()
 
 
 class CLI:
+    def bot(self):
+        run_bot()
+
     def scheduler(self):
         import cheminfra.ingest.containers
+
         config = load_default_configuration()
         engine = create_engine(config.database.url, echo=config.database.echo)
         scheduler.run(engine)
@@ -52,7 +61,8 @@ class CLI:
                             print(parsed)
                     except Exception as e:
                         log.error("error parsing log line", log_line=log_line, error=e)
-            #print(container.name, container.status)
+            # print(container.name, container.status)
+
 
 if __name__ == "__main__":
     fire.Fire(CLI)
