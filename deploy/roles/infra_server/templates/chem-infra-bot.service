@@ -1,0 +1,14 @@
+[Unit]
+Description=Chemhacktica Infra Bot Server
+After=network.target
+
+[Service]
+ExecStart=/home/askcos/infra/start-bot.sh
+Type=exec
+Restart=always
+User=askcos
+WorkingDirectory=/home/askcos/infra
+
+[Install]
+WantedBy=default.target
+RequiredBy=network.target

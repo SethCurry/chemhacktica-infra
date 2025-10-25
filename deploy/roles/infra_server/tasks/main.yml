@@ -99,3 +99,16 @@
     daemon_reload: true
     state: restarted
     enabled: true
+
+- name: Copy bot service file
+  ansible.builtin.template:
+    src: chem-infra-bot.service
+    dest: /etc/systemd/system/chem-infra-bot.service
+    mode: "0644"
+
+- name: Enable bot service
+  ansible.builtin.systemd:
+    name: chem-infra-bot
+    daemon_reload: true
+    state: restarted
+    enabled: true
